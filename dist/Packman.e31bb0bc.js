@@ -356,6 +356,30 @@ var GameBoard = /*#__PURE__*/function () {
     value: function rotateDiv(pos, deg) {
       this.grid[pos].style.transform = "rotate(".concat(deg, "deg)");
     }
+  }, {
+    key: "moveCharacter",
+    value: function moveCharacter(character) {
+      if (character.shouldMove()) {
+        var _character$getNextMov = character.getNextMove(this.objectExist),
+            nextMovePos = _character$getNextMov.nextMovePos,
+            direction = _character$getNextMov.direction;
+
+        var _character$makeMove = character.makeMove(),
+            classesToRemove = _character$makeMove.classesToRemove,
+            classesToAdd = _character$makeMove.classesToAdd;
+
+        if (character.rotation && nextMovePos !== character.pos) {
+          // Rotate
+          this.rotateDiv(nextMovePos, character.dir.rotation); // Rotate the previous div back
+
+          this.rotateDiv(character.pos, 0);
+        }
+
+        this.removeObject(character.pos, classesToRemove);
+        this.addObject(nextMovePos, classesToAdd);
+        character.setNewPos(nextMovePos, direction);
+      }
+    }
   }], [{
     key: "createGameBoard",
     value: function createGameBoard(DOMGrid, level) {
@@ -393,7 +417,7 @@ var Pacman = /*#__PURE__*/function () {
 
     (0, _classCallCheck2.default)(this, Pacman);
     (0, _defineProperty2.default)(this, "handleKeyInput", function (e, objectExist) {
-      console.log(e);
+      //console.log(e);
       var dir;
 
       if (e.keyCode >= 37 && e.keyCode <= 40) {
@@ -496,7 +520,10 @@ function gameOver(pacman, grid) {}
 
 function checkCollision(pacman, ghost) {}
 
-function gameLoop(pacman, ghost) {}
+function gameLoop(pacman, ghost) {
+  //console.log("works");
+  gameBoard.moveCharacter(pacman);
+}
 
 function startGame() {
   gameWin = false;
@@ -504,11 +531,15 @@ function startGame() {
   score = 0;
   startButton.classList.add("hide");
   gameBoard.createGrid(_setup.LEVEL);
-  var packman = new _Packman.default(2, 287);
+  var pacman = new _Packman.default(2, 287);
   gameBoard.addObject(287, [_setup.OBJECT_TYPE.PACMAN]);
   document.addEventListener("keydown", function (e) {
-    return packman.handleKeyInput(e, gameBoard.objectExist);
-  });
+    return pacman.handleKeyInput(e, gameBoard.objectExist);
+  }); // Gameloop
+
+  timer = setInterval(function () {
+    return gameLoop(pacman);
+  }, GLOBAL_SPEED);
 } // Initailize game
 
 

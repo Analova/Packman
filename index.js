@@ -26,7 +26,10 @@ function gameOver(pacman, grid) {}
 
 function checkCollision(pacman, ghost) {}
 
-function gameLoop(pacman, ghost) {}
+function gameLoop(pacman, ghost) {
+  //console.log("works");
+  gameBoard.moveCharacter(pacman);
+}
 
 function startGame() {
   gameWin = false;
@@ -36,11 +39,14 @@ function startGame() {
 
   gameBoard.createGrid(LEVEL);
 
-  const packman = new Pacman(2, 287);
+  const pacman = new Pacman(2, 287);
   gameBoard.addObject(287, [OBJECT_TYPE.PACMAN]);
   document.addEventListener("keydown", (e) =>
-    packman.handleKeyInput(e, gameBoard.objectExist)
+    pacman.handleKeyInput(e, gameBoard.objectExist)
   );
+
+  // Gameloop
+  timer = setInterval(() => gameLoop(pacman), GLOBAL_SPEED);
 }
 
 // Initailize game
