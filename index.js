@@ -24,17 +24,48 @@ let powerPillActive = false;
 let powerPillTimer = null;
 
 // Functions
-function gameOver(pacman, grid) {}
+function gameOver(pacman, grid) {
+  document.removeEventListener("keydown", (e) =>
+    pacman.handleKeyInput(e, gameBoard.objectExist)
+  );
+  gameBoard.showGameStatus(gameWin);
 
-function checkCollision(pacman, ghost) {}
+  clearInterval(timer);
+  // Show startbutton
+  startButton.classList.remove("hide");
+}
+
+function checkCollision(pacman, ghosts) {
+  const collidedGhost = ghosts.find((ghost) => pacman.pos === ghost.pos);
+
+  if (collidedGhost) {
+    if (pacman.powerPill) {
+      playAudio(soundGhost);
+      gameBoard.removeObject(collidedGhost.pos, [
+        OBJECT_TYPE.GHOST,
+        OBJECT_TYPE.SCARED,
+        collidedGhost.name,
+      ]);
+      collidedGhost.pos = collidedGhost.startPos;
+      score += 100;
+    } else {
+      gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PACMAN]);
+      gameBoard.rotateDiv(pacman.pos, 0);
+      gameOver(pacman, gameGrid);
+    }
+  }
+}
 
 function gameLoop(pacman, ghosts) {
   //console.log("works");
-  // Move Pacman
+  // 1.Move Pacman
   gameBoard.moveCharacter(pacman);
+  // 2. Check Ghost collision on the old positions
+  checkCollision(pacman, ghosts);
 
   // 3. Move ghosts
   ghosts.forEach((ghost) => gameBoard.moveCharacter(ghost));
+  checkCollision(pacman, ghosts);
 }
 
 function startGame() {

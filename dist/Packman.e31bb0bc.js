@@ -635,18 +635,46 @@ var gameWin = false;
 var powerPillActive = false;
 var powerPillTimer = null; // Functions
 
-function gameOver(pacman, grid) {}
+function gameOver(pacman, grid) {
+  document.removeEventListener("keydown", function (e) {
+    return pacman.handleKeyInput(e, gameBoard.objectExist);
+  });
+  gameBoard.showGameStatus(gameWin);
+  clearInterval(timer); // Show startbutton
 
-function checkCollision(pacman, ghost) {}
+  startButton.classList.remove("hide");
+}
+
+function checkCollision(pacman, ghosts) {
+  var collidedGhost = ghosts.find(function (ghost) {
+    return pacman.pos === ghost.pos;
+  });
+
+  if (collidedGhost) {
+    if (pacman.powerPill) {
+      playAudio(soundGhost);
+      gameBoard.removeObject(collidedGhost.pos, [_setup.OBJECT_TYPE.GHOST, _setup.OBJECT_TYPE.SCARED, collidedGhost.name]);
+      collidedGhost.pos = collidedGhost.startPos;
+      score += 100;
+    } else {
+      gameBoard.removeObject(pacman.pos, [_setup.OBJECT_TYPE.PACMAN]);
+      gameBoard.rotateDiv(pacman.pos, 0);
+      gameOver(pacman, gameGrid);
+    }
+  }
+}
 
 function gameLoop(pacman, ghosts) {
   //console.log("works");
-  // Move Pacman
-  gameBoard.moveCharacter(pacman); // 3. Move ghosts
+  // 1.Move Pacman
+  gameBoard.moveCharacter(pacman); // 2. Check Ghost collision on the old positions
+
+  checkCollision(pacman, ghosts); // 3. Move ghosts
 
   ghosts.forEach(function (ghost) {
     return gameBoard.moveCharacter(ghost);
   });
+  checkCollision(pacman, ghosts);
 }
 
 function startGame() {
