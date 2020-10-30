@@ -6,6 +6,13 @@ import GameBoard from "./GameBoard";
 import Pacman from "./Packman";
 import Ghost from "./Ghost";
 
+// Sounds
+import soundDot from "./sounds/munch.wav";
+import soundPill from "./sounds/pill.wav";
+import soundGameStart from "./sounds/game_start.wav";
+import soundGameOver from "./sounds/death.wav";
+import soundGhost from "./sounds/eat_ghost.wav";
+
 // DOM Elements
 const gameGrid = document.querySelector("#game");
 const scoreTable = document.querySelector("#score");
@@ -23,8 +30,15 @@ let gameWin = false;
 let powerPillActive = false;
 let powerPillTimer = null;
 
+// --- AUDIO --- //
+function playAudio(audio) {
+  const soundEffect = new Audio(audio);
+  soundEffect.play();
+}
+
 // Functions
 function gameOver(pacman, grid) {
+  playAudio(soundGameOver);
   document.removeEventListener("keydown", (e) =>
     pacman.handleKeyInput(e, gameBoard.objectExist)
   );
@@ -66,9 +80,49 @@ function gameLoop(pacman, ghosts) {
   // 3. Move ghosts
   ghosts.forEach((ghost) => gameBoard.moveCharacter(ghost));
   checkCollision(pacman, ghosts);
+  // 4. Do a new ghost collision check on the new positions
+  checkCollision(pacman, ghosts);
+
+  // 5. Check if Pacman eats a dot
+  if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.DOT)) {
+    playAudio(soundDot);
+    gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.DOT]);
+    // Remove a dot
+    gameBoard.dotCount--;
+    // Add Score
+    score += 10;
+  }
+
+  // 6. Check if Pacman eats a power pill
+  if (gameBoard.objectExist(pacman.pos, OBJECT_TYPE.PILL)) {
+    playAudio(soundPill);
+    gameBoard.removeObject(pacman.pos, [OBJECT_TYPE.PILL]);
+
+    pacman.powerPill = true;
+    score += 50;
+
+    clearTimeout(powerPillTimer);
+    powerPillTimer = setTimeout(
+      () => (pacman.powerPill = false),
+      POWER_PILL_TIME
+    );
+  }
+  // 7. Change ghost scare mode depending on powerpill
+  if (pacman.powerPill !== powerPillActive) {
+    powerPillActive = pacman.powerPill;
+    ghosts.forEach((ghost) => (ghost.isScared = pacman.powerPill));
+  }
+  // 8. Check if all dots have been eaten
+  if (gameBoard.dotCount === 0) {
+    gameWin = true;
+    gameOver(pacman, gameGrid);
+  }
+  // 9. Show new score
+  scoreTable.innerHTML = score;
 }
 
 function startGame() {
+  playAudio(soundGameStart);
   gameWin = false;
   powerPillActive = false;
   score = 0;
